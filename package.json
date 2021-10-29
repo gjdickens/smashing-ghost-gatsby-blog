@@ -8,7 +8,9 @@
     "url": "https://github.com/gatsbyjs/gatsby/issues"
   },
   "dependencies": {
+    "cheerio": "^1.0.0-rc.10",
     "gatsby": "^4.0.2",
+    "gatsby-plugin-catch-links": "^4.0.0",
     "gatsby-plugin-feed": "^4.0.0",
     "gatsby-plugin-gatsby-cloud": "^4.0.0",
     "gatsby-plugin-google-analytics": "^4.0.0",

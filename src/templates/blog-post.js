@@ -8,6 +8,7 @@ import Seo from "../components/seo"
 const BlogPostTemplate = ({ data, location }) => {
   const post = data.ghostPost
   const siteTitle = data.site.siteMetadata?.title || `Title`
+  console.log(post.meta_title);
 
   return (
     <Layout location={location} title={siteTitle}>
@@ -53,6 +54,7 @@ export const pageQuery = graphql`
         excerpt
         published_at_pretty: published_at(formatString: "DD MMMM, YYYY")
         html
+        meta_title
       }
   }
   `

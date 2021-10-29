@@ -6,18 +6,19 @@ module.exports = {
       summary: `who lives and works in San Francisco building useful things.`,
     },
     description: `A starter blog demonstrating what Gatsby can do.`,
-    siteUrl: `https://gatsbystarterblogsource.gatsbyjs.io/`,
+    siteUrl: `http://localhost:8000/`,
     social: {
       twitter: `kylemathews`,
     },
   },
   plugins: [
     `gatsby-plugin-image`,
+    `gatsby-plugin-catch-links`,
     {
       resolve: `gatsby-source-ghost`,
       options: {
-        apiUrl: `https://gatsby.ghost.io`,
-        contentApiKey: `9cc5c67c358edfdd81455149d0`,
+        apiUrl: `http://localhost:2368`,
+        contentApiKey: `cf4ccbfdb5412d30e9d2772a80`,
       }
     },
     {
