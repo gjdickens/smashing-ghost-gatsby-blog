@@ -4,8 +4,9 @@ import { Link, graphql } from "gatsby"
 import Bio from "../components/bio"
 import Layout from "../components/layout"
 import Seo from "../components/seo"
+import Pagination from '../components/pagination'
 
-const BlogIndex = ({ data, location }) => {
+const BlogIndex = ({ data, location, pageContext }) => {
   const siteTitle = data.site.siteMetadata?.title || `Title`
   const posts = data.allGhostPost.edges
 
@@ -13,7 +14,6 @@ const BlogIndex = ({ data, location }) => {
     return (
       <Layout location={location} title={siteTitle}>
         <Seo title="All posts" />
-        <Bio />
         <p>
           No blog posts found. Add markdown posts to "content/blog" (or the
           directory you specified for the "gatsby-source-filesystem" plugin in
@@ -26,7 +26,6 @@ const BlogIndex = ({ data, location }) => {
   return (
     <Layout location={location} title={siteTitle}>
       <Seo title="All posts" />
-      <Bio />
       <ol style={{ listStyle: `none` }}>
         {posts.map(post => {
           const title = post.node.title || post.fields.slug
@@ -59,6 +58,12 @@ const BlogIndex = ({ data, location }) => {
           )
         })}
       </ol>
+      <p
+        dangerouslySetInnerHTML={{
+          __html: pageContext.dynamicContent.message,
+        }}
+      />
+      <Pagination pageContext={pageContext} />
     </Layout>
   )
 }
@@ -66,20 +71,20 @@ const BlogIndex = ({ data, location }) => {
 export default BlogIndex
 
 export const pageQuery = graphql`
-  query {
+  query GhostIndexQuery($limit: Int!, $skip: Int!) {
     site {
       siteMetadata {
         title
       }
     }
-    allGhostPost(sort: { fields: [published_at], order: DESC }) {
+    allGhostPost(
+        sort: { order: DESC, fields: [published_at] },
+        limit: $limit,
+        skip: $skip
+    ) {
       edges {
         node {
-          id
-          title
-          slug
-          excerpt
-          published_at_pretty: published_at(formatString: "DD MMMM, YYYY")
+          ...GhostPostFields
         }
       }
     }
