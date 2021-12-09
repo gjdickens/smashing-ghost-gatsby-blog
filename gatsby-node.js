@@ -63,42 +63,19 @@ exports.createPages = async ({ graphql, actions }) => {
     const pageTemplate = path.resolve(`./src/templates/page.js`)
     const postTemplate = path.resolve(`./src/templates/post.js`)
 
+    // Parse internal pages for dynamic content
     let dynamicContent = {};
 
-    // Create external pages and parse internal pages for data
     pages.forEach(({ node }) => {
-      // This part here defines, that our pages will use
-      // a `/:slug/` permalink.
-      node.url = `/${node.slug}/`
-
-      let external = true;
-      let internalTagName;
       //check if page includes tag with hash
       if (node.tags.length > 0) {
         const internalTags = node.tags.filter((tag) => tag.slug.includes('hash-'));
-        // if so, mark as internal and set internalTagName to be the same as the tag without the hash
+        // if so, set internalTagName to be the same as the tag without the hash and assign HTML to dynamicContent object
         if (internalTags.length > 0) {
-          external = false;
-          internalTagName = internalTags[0].slug.split('hash-')[1];
+          let internalTagName = internalTags[0].slug.split('hash-')[1];
+          dynamicContent[internalTagName] = node.html;
         }
       }
-      //if page is external, create page
-      if (external) {
-        createPage({
-            path: node.url,
-            component: pageTemplate,
-            context: {
-                // Data passed to context is available
-                // in page queries as GraphQL variables.
-                slug: node.slug,
-            },
-        })
-      }
-      //if page is not external, parse page for data and add to dynamicContent
-      else {
-        dynamicContent[internalTagName] = node.html;
-      }
-
     })
 
     // Create tag pages
@@ -119,7 +96,8 @@ exports.createPages = async ({ graphql, actions }) => {
             component: tagsTemplate,
             pathPrefix: ({ pageNumber }) => (pageNumber === 0) ? url : `${url}/page`,
             context: {
-                slug: node.slug
+                slug: node.slug,
+                dynamicContent: dynamicContent
             }
         })
     })
@@ -142,9 +120,35 @@ exports.createPages = async ({ graphql, actions }) => {
             component: authorTemplate,
             pathPrefix: ({ pageNumber }) => (pageNumber === 0) ? url : `${url}/page`,
             context: {
-                slug: node.slug
+                slug: node.slug,
+                dynamicContent: dynamicContent
             }
         })
+    })
+
+    // Create pages
+    pages.forEach(({ node }) => {
+      //check if page includes tag with hash
+      if (node.tags.length > 0) {
+        const internalTags = node.tags.filter((tag) => tag.slug.includes('hash-'));
+        // if not internal, create page
+        if (internalTags.length < 1) {
+          // This part here defines, that our pages will use
+          // a `/:slug/` permalink.
+          node.url = `/${node.slug}/`
+
+          createPage({
+              path: node.url,
+              component: pageTemplate,
+              context: {
+                  // Data passed to context is available
+                  // in page queries as GraphQL variables.
+                  slug: node.slug,
+                  dynamicContent: dynamicContent
+              },
+          })
+        }
+      }
     })
 
     // Create post pages
@@ -159,6 +163,7 @@ exports.createPages = async ({ graphql, actions }) => {
                 // Data passed to context is available
                 // in page queries as GraphQL variables.
                 slug: node.slug,
+                dynamicContent: dynamicContent
             },
         })
     })
