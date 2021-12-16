@@ -1,3 +1,6 @@
+const config = require(`./src/utils/siteConfig`);
+const generateRSSFeed = require(`./src/utils/generate-feed`);
+
 module.exports = {
   siteMetadata: {
     title: `Gatsby Starter Blog`,
@@ -6,7 +9,7 @@ module.exports = {
       summary: `who lives and works in San Francisco building useful things.`,
     },
     description: `A starter blog demonstrating what Gatsby can do.`,
-    siteUrl: `http://localhost:8000/`,
+    siteUrl: `https://brave-archimedes-9fb2cc.netlify.app/`,
     social: {
       twitter: `kylemathews`,
     },
@@ -52,57 +55,94 @@ module.exports = {
     //   },
     // },
     {
-      resolve: `gatsby-plugin-feed`,
-      options: {
-        query: `
-          {
-            site {
-              siteMetadata {
-                title
-                description
-                siteUrl
-                site_url: siteUrl
-              }
-            }
-          }
-        `,
-        feeds: [
-          {
-            serialize: ({ query: { site, allMarkdownRemark } }) => {
-              return allMarkdownRemark.nodes.map(node => {
-                return Object.assign({}, node.frontmatter, {
-                  description: node.excerpt,
-                  date: node.frontmatter.date,
-                  url: site.siteMetadata.siteUrl + node.fields.slug,
-                  guid: site.siteMetadata.siteUrl + node.fields.slug,
-                  custom_elements: [{ "content:encoded": node.html }],
-                })
-              })
-            },
+        resolve: `gatsby-plugin-feed`,
+        options: {
             query: `
-              {
-                allMarkdownRemark(
-                  sort: { order: DESC, fields: [frontmatter___date] },
-                ) {
-                  nodes {
-                    excerpt
-                    html
-                    fields {
-                      slug
+            {
+                allGhostSettings {
+                    edges {
+                        node {
+                            title
+                            description
+                        }
                     }
-                    frontmatter {
-                      title
-                      date
-                    }
-                  }
                 }
-              }
-            `,
-            output: "/rss.xml",
-            title: "Gatsby Starter Blog RSS Feed",
-          },
-        ],
-      },
+            }
+          `,
+            feeds: [
+                generateRSSFeed(config),
+            ],
+        },
+    },
+    {
+      resolve: `gatsby-plugin-advanced-sitemap`,
+      options: {
+          query: `
+            {
+                allGhostPost {
+                    edges {
+                        node {
+                            id
+                            slug
+                            updated_at
+                            created_at
+                            feature_image
+                        }
+                    }
+                }
+                allGhostPage {
+                    edges {
+                        node {
+                            id
+                            slug
+                            updated_at
+                            created_at
+                            feature_image
+                        }
+                    }
+                }
+                allGhostTag {
+                    edges {
+                        node {
+                            id
+                            slug
+                            feature_image
+                        }
+                    }
+                }
+                allGhostAuthor {
+                    edges {
+                        node {
+                            id
+                            slug
+                            profile_image
+                        }
+                    }
+                }
+            }`,
+            mapping: {
+                allGhostPost: {
+                    sitemap: `posts`,
+                },
+                allGhostTag: {
+                    sitemap: `tags`,
+                },
+                allGhostAuthor: {
+                    sitemap: `authors`,
+                },
+                allGhostPage: {
+                    sitemap: `pages`,
+                },
+            },
+            exclude: [
+                `/dev-404-page`,
+                `/404`,
+                `/404.html`,
+                `/offline-plugin-app-shell-fallback`,
+            ],
+            createLinkInHead: true,
+            addUncaughtPages: true,
+        },
     },
     {
       resolve: `gatsby-plugin-manifest`,

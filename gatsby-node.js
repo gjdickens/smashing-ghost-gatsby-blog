@@ -1,8 +1,7 @@
 const path = require(`path`);
-const url = require(`url`);
-const cheerio = require('cheerio');
 const { paginate } = require(`gatsby-awesome-pagination`);
 const { postsPerPage } = require(`./src/utils/siteConfig`);
+const replaceLinks = require(`./src/utils/replaceLinks`);
 
 exports.createPages = async ({ graphql, actions }) => {
     const { createPage } = actions
@@ -63,21 +62,6 @@ exports.createPages = async ({ graphql, actions }) => {
     const pageTemplate = path.resolve(`./src/templates/page.js`)
     const postTemplate = path.resolve(`./src/templates/post.js`)
 
-    // Parse internal pages for dynamic content
-    let dynamicContent = {};
-
-    pages.forEach(({ node }) => {
-      //check if page includes tag with hash
-      if (node.tags.length > 0) {
-        const internalTags = node.tags.filter((tag) => tag.slug.includes('hash-'));
-        // if so, set internalTagName to be the same as the tag without the hash and assign HTML to dynamicContent object
-        if (internalTags.length > 0) {
-          let internalTagName = internalTags[0].slug.split('hash-')[1];
-          dynamicContent[internalTagName] = node.html;
-        }
-      }
-    })
-
     // Create tag pages
     tags.forEach(({ node }) => {
         const totalPosts = node.postCount !== null ? node.postCount : 0
@@ -96,8 +80,7 @@ exports.createPages = async ({ graphql, actions }) => {
             component: tagsTemplate,
             pathPrefix: ({ pageNumber }) => (pageNumber === 0) ? url : `${url}/page`,
             context: {
-                slug: node.slug,
-                dynamicContent: dynamicContent
+                slug: node.slug
             }
         })
     })
@@ -120,8 +103,7 @@ exports.createPages = async ({ graphql, actions }) => {
             component: authorTemplate,
             pathPrefix: ({ pageNumber }) => (pageNumber === 0) ? url : `${url}/page`,
             context: {
-                slug: node.slug,
-                dynamicContent: dynamicContent
+                slug: node.slug
             }
         })
     })
@@ -143,8 +125,7 @@ exports.createPages = async ({ graphql, actions }) => {
               context: {
                   // Data passed to context is available
                   // in page queries as GraphQL variables.
-                  slug: node.slug,
-                  dynamicContent: dynamicContent
+                  slug: node.slug
               },
           })
         }
@@ -162,8 +143,7 @@ exports.createPages = async ({ graphql, actions }) => {
             context: {
                 // Data passed to context is available
                 // in page queries as GraphQL variables.
-                slug: node.slug,
-                dynamicContent: dynamicContent
+                slug: node.slug
             },
         })
     })
@@ -171,11 +151,8 @@ exports.createPages = async ({ graphql, actions }) => {
     // Create Index page with pagination
     paginate({
         createPage,
-        context: {
-          dynamicContent: dynamicContent
-        },
         items: posts,
-        itemsPerPage: 4,
+        itemsPerPage: postsPerPage,
         component: indexTemplate,
         pathPrefix: ({ pageNumber }) => {
             if (pageNumber === 0) {
@@ -187,27 +164,17 @@ exports.createPages = async ({ graphql, actions }) => {
     })
 }
 
-exports.onCreateNode = async ({ node, getNodesByType }) => {
+
+exports.onCreateNode = async ({ actions, node, getNodesByType }) => {
   if (node.internal.owner !== `gatsby-source-ghost`) {
     return
   }
   if (node.internal.type === 'GhostPage' || node.internal.type === 'GhostPost') {
     const settings = getNodesByType(`GhostSettings`);
-    const siteUrl = url.parse(settings[0].url);
-
-    const $ = cheerio.load(node.html);
-    const links = $('a');
-    links.attr('href', function(i, href){
-      if (href) {
-        const hrefUrl = url.parse(href);
-        if (hrefUrl.protocol === siteUrl.protocol && hrefUrl.host === siteUrl.host) {
-          return hrefUrl.path
-        }
-
-        return href;
-      }
-
-    });
-    node.html = $.html();
+    actions.createNodeField({
+      name: 'html',
+      value: replaceLinks(node.html, settings[0].url),
+      node
+    })
   }
 }

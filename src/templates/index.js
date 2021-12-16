@@ -9,6 +9,7 @@ import Pagination from '../components/pagination'
 const BlogIndex = ({ data, location, pageContext }) => {
   const siteTitle = data.site.siteMetadata?.title || `Title`
   const posts = data.allGhostPost.edges
+  const message = data.message;
 
   if (posts.length === 0) {
     return (
@@ -26,6 +27,11 @@ const BlogIndex = ({ data, location, pageContext }) => {
   return (
     <Layout location={location} title={siteTitle}>
       <Seo title="All posts" />
+      <section
+        dangerouslySetInnerHTML={{
+          __html: message.fields.html,
+        }}
+      />
       <ol style={{ listStyle: `none` }}>
         {posts.map(post => {
           const title = post.node.title || post.fields.slug
@@ -39,7 +45,7 @@ const BlogIndex = ({ data, location, pageContext }) => {
               >
                 <header>
                   <h2>
-                    <Link to={post.node.slug} itemProp="url">
+                    <Link to={`/${post.node.slug}/`} itemProp="url">
                       <span itemProp="headline">{title}</span>
                     </Link>
                   </h2>
@@ -58,11 +64,6 @@ const BlogIndex = ({ data, location, pageContext }) => {
           )
         })}
       </ol>
-      <p
-        dangerouslySetInnerHTML={{
-          __html: pageContext.dynamicContent.message,
-        }}
-      />
       <Pagination pageContext={pageContext} />
     </Layout>
   )
@@ -76,6 +77,12 @@ export const pageQuery = graphql`
       siteMetadata {
         title
       }
+    }
+    message: ghostPage
+      (tags: {elemMatch: {slug: {eq: "hash-message"}}}) {
+        fields {
+          html
+        }
     }
     allGhostPost(
         sort: { order: DESC, fields: [published_at] },

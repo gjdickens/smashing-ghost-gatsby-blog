@@ -40,7 +40,7 @@ const Post = ({ data, location }) => {
                             {/* The main post content */ }
                             <section
                                 className="content-body load-external-scripts"
-                                dangerouslySetInnerHTML={{ __html: post.html }}
+                                dangerouslySetInnerHTML={{ __html: post.fields.html }}
                             />
                         </section>
                     </article>
@@ -66,8 +66,11 @@ export default Post
 
 export const postQuery = graphql`
     query($slug: String!) {
-        ghostPost(slug: { eq: $slug }) {
+        ghostPost(slug: { eq: $slug } ) {
             ...GhostPostFields
+            fields {
+              html
+            }
         }
         site {
           siteMetadata {
