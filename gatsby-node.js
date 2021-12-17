@@ -14,7 +14,7 @@ exports.createPages = async ({ graphql, actions }) => {
                   }
               }
           }
-          allGhostTag(sort: { order: ASC, fields: name }) {
+          allGhostTag(sort: { order: ASC, fields: name }, filter: {slug: {regex: "/^((?!hash-).)*$/"}}) {
               edges {
                   node {
                       slug
@@ -32,15 +32,12 @@ exports.createPages = async ({ graphql, actions }) => {
                   }
               }
           }
-          allGhostPage(sort: { order: ASC, fields: published_at }) {
+          allGhostPage(sort: { order: ASC, fields: published_at }, filter: {tags: {elemMatch: {slug: {regex: "/^((?!hash-).)*$/"}}}}) {
               edges {
                   node {
                       slug
                       url
                       html
-                      tags {
-                          slug
-                      }
                   }
               }
           }
@@ -110,26 +107,19 @@ exports.createPages = async ({ graphql, actions }) => {
 
     // Create pages
     pages.forEach(({ node }) => {
-      //check if page includes tag with hash
-      if (node.tags.length > 0) {
-        const internalTags = node.tags.filter((tag) => tag.slug.includes('hash-'));
-        // if not internal, create page
-        if (internalTags.length < 1) {
-          // This part here defines, that our pages will use
-          // a `/:slug/` permalink.
-          node.url = `/${node.slug}/`
+        // This part here defines, that our pages will use
+        // a `/:slug/` permalink.
+        node.url = `/${node.slug}/`
 
-          createPage({
-              path: node.url,
-              component: pageTemplate,
-              context: {
-                  // Data passed to context is available
-                  // in page queries as GraphQL variables.
-                  slug: node.slug
-              },
-          })
-        }
-      }
+        createPage({
+            path: node.url,
+            component: pageTemplate,
+            context: {
+                // Data passed to context is available
+                // in page queries as GraphQL variables.
+                slug: node.slug
+            },
+        })
     })
 
     // Create post pages

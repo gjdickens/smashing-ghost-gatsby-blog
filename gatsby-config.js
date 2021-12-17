@@ -90,7 +90,7 @@ module.exports = {
                         }
                     }
                 }
-                allGhostPage {
+                allGhostPage(filter: {tags: {elemMatch: {slug: {regex: "/^((?!hash-).)*$/"}}}}) {
                     edges {
                         node {
                             id
@@ -101,7 +101,7 @@ module.exports = {
                         }
                     }
                 }
-                allGhostTag {
+                allGhostTag(filter: {slug: {regex: "/^((?!hash-).)*$/"}}) {
                     edges {
                         node {
                             id
@@ -138,7 +138,7 @@ module.exports = {
                 `/dev-404-page`,
                 `/404`,
                 `/404.html`,
-                `/offline-plugin-app-shell-fallback`,
+                `/offline-plugin-app-shell-fallback`
             ],
             createLinkInHead: true,
             addUncaughtPages: true,
